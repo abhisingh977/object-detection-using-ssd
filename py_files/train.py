@@ -25,7 +25,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Learning parameters
 checkpoint = None  # path to model checkpoint, None if none
 batch_size = 8  # batch size
-iterations = 125  # number of iterations to train
+
+#iterations = 125  # number of iterations to train
 workers = 4  # number of workers for loading data in the DataLoader
 print_freq = 80  # print training status every __ batches
 lr = 1e-3  # learning rate
@@ -78,6 +79,14 @@ def main():
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
                                                collate_fn=train_dataset.collate_fn, num_workers=workers,
                                                pin_memory=True)  # note that we're passing the collate function here
+
+
+    test_dataset = PascalVOCDataset(data_folder,
+                                    split='test',
+                                    keep_difficult=keep_difficult)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True,
+                                              collate_fn=test_dataset.collate_fn, num_workers=workers, pin_memory=True)
+    #print(next(iter(test_loader)))
 #    print(train_loader)
 #    a=next(iter(train_loader))
 #    print(a)
@@ -101,6 +110,11 @@ def main():
               criterion=criterion,
               optimizer=optimizer,
               epoch=epoch)
+        test(test_loader=test_loader,
+              model=model,
+              criterion=criterion,
+              #optimizer=optimizer,
+              epoch=epoch)
 
         # Save checkpoint
         save_checkpoint(epoch, model, optimizer)
@@ -118,7 +132,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
     """
     model.train()  # training mode enables dropout
 
-    batch_time = AverageMeter()  # forward prop. + back prop. time
+   # batch_time = AverageMeter()  # forward prop. + back prop. time
     data_time = AverageMeter()  # data loading time
     losses = AverageMeter()  # loss
 
@@ -126,7 +140,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
     # Batches
     for i, (images, boxes, labels, _) in enumerate(train_loader):
-#        print(i)
+        #print(i)
 #        print(boxes)
         data_time.update(time.time() - start)
 
@@ -153,19 +167,102 @@ def train(train_loader, model, criterion, optimizer, epoch):
         optimizer.step()
         #print(loss.item())
         losses.update(loss.item(), images.size(0))
-        batch_time.update(time.time() - start)
+        #batch_time.update(time.time() - start)
 
         start = time.time()
 
+
         # Print status
-        if i % print_freq == 0:
-            print('Epoch: [{0}][{1}/{2}]\t'
-                  'Batch Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+        if i  ==  len(train_loader)-1:
+            print('Epoch: [{0}]\t'
                   'Data Time {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch, i, len(train_loader),
-                                                                  batch_time=batch_time,
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch,
+                                                                 # batch_time=batch_time,
                                                                   data_time=data_time, loss=losses))
     del predicted_locs, predicted_scores, images, boxes, labels  # free some memory since their histories may be stored
+
+
+
+def test(test_loader, model, criterion, epoch):
+    """
+    One epoch's training.
+
+    :param train_loader: DataLoader for training data
+    :param model: model
+    :param criterion: MultiBox loss
+    :param optimizer: optimizer
+    :param epoch: epoch number
+    """
+    model.eval()   # training mode enables dropout
+
+    with torch.no_grad():
+        #batch_time = AverageMeter()  # forward prop. time
+        data_time = AverageMeter()  # data loading time
+        losses_test = AverageMeter()  # loss
+
+        start = time.time()
+
+        # Batches
+        for i, (images, boxes, labels, _) in enumerate(test_loader):
+    #        print(i)
+    #        print(boxes)
+            data_time.update(time.time() - start)
+
+            # Move to default device
+            images = images.to(device)  # (batch_size (N), 3, 300, 300)
+            boxes = [b.to(device) for b in boxes]
+            labels = [l.to(device) for l in labels]
+
+            # Forward prop.
+            predicted_locs, predicted_scores = model(images)  # (N, 8732, 4), (N, 8732, n_classes)
+
+            # Loss
+            loss = criterion(predicted_locs, predicted_scores, boxes, labels)  # scalar
+
+            # Backward prop.
+            # optimizer.zero_grad()
+            # loss.backward()
+
+            # Clip gradients, if necessary
+            # if grad_clip is not None:
+            #     clip_gradient(optimizer, grad_clip)
+            #
+            # # Update model
+            # optimizer.step()
+            #print(loss.item())
+            losses_test.update(loss.item(), images.size(0))
+            #batch_time.update(time.time() - start)
+
+            start = time.time()
+
+
+            # Print status
+            if i  == len(test_loader)-1:
+                print('Epoch: [{0}]\t'
+                      'Data Time {data_time.val:.3f} ({data_time.avg:.3f})\t'
+                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch,
+                                                                      #batch_time=batch_time,
+                                                                      data_time=data_time, loss=losses_test))
+        del predicted_locs, predicted_scores, images, boxes, labels  # free some memory since their histories may be stored
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
