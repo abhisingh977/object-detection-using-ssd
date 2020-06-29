@@ -2,34 +2,45 @@ from utils import *
 from datasets import PascalVOCDataset
 from tqdm import tqdm
 from pprint import PrettyPrinter
-
+from model import SSD300, MultiBoxLoss
+from datasets import PascalVOCDataset
+#from utils import *
 # Good formatting when printing the APs for each class and mAP
 pp = PrettyPrinter()
-
+n_classes = len(label_map)
 # Parameters
+#torch.cuda.set_device()
 data_folder = './'
 #data_folder='VOCdevkit/VOC2007'
 keep_difficult = True  # difficult ground truth objects must always be considered in mAP calculation, because these objects DO exist!
-batch_size = 64
+batch_size = 4
 workers = 4
+torch.cuda.empty_cache()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-checkpoint = './checkpoint_ssd300.pth.tar'
+
+#checkpoint = './checkpoint_ssd300.pth.tar'
 
 # Load model checkpoint that is to be evaluated
-checkpoint = torch.load(checkpoint)
-model = checkpoint['model']
+model = SSD300(n_classes=n_classes)
+
 model = model.to(device)
-
-# Switch to eval mode
+checkpoint = torch.load('modelannefinal.pt')
+model.load_state_dict(checkpoint)
+# # Switch to eval mode
 model.eval()
+# train_dataset = PascalVOCDataset(data_folder,
+#                                 split='train',
+#                                  keep_difficult=keep_difficult)
 
-# Load test data
+
+
+#Load test data
 test_dataset = PascalVOCDataset(data_folder,
                                 split='test',
                                 keep_difficult=keep_difficult)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False,
                                           collate_fn=test_dataset.collate_fn, num_workers=workers, pin_memory=True)
-
+#
 
 def evaluate(test_loader, model):
     """
@@ -60,7 +71,7 @@ def evaluate(test_loader, model):
 
             # Detect objects in SSD output
             det_boxes_batch, det_labels_batch, det_scores_batch = model.detect_objects(predicted_locs, predicted_scores,
-                                                                                       min_score=0.01, max_overlap=0.45,
+                                                                                       min_score=0.02, max_overlap=0.5,
                                                                                        top_k=200)
             # Evaluation MUST be at min_score=0.01, max_overlap=0.45, top_k=200 for fair comparision with the paper's results and other repos
 

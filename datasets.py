@@ -2,7 +2,9 @@ import torch
 from torch.utils.data import Dataset
 import json
 import os
+#import PIL
 from PIL import Image
+
 from utils import transform
 
 
@@ -60,11 +62,8 @@ class PascalVOCDataset(Dataset):
     def collate_fn(self, batch):
         """
         Since each image may have a different number of objects, we need a collate function (to be passed to the DataLoader).
-
         This describes how to combine these tensors of different sizes. We use lists.
-
         Note: this need not be defined in this Class, can be standalone.
-
         :param batch: an iterable of N sets from __getitem__()
         :return: a tensor of images, lists of varying-size tensors of bounding boxes, labels, and difficulties
         """
@@ -82,4 +81,4 @@ class PascalVOCDataset(Dataset):
 
         images = torch.stack(images, dim=0)
 
-        return images, boxes, labels, difficulties  # tensor (N, 3, 300, 300), 3 lists of N tensors each
+        return images, boxes, labels, difficulties

@@ -9,13 +9,13 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Label map
 
-voc_labels = ('bulldozer', 'crane','excavator and bulldozer', 'formwork', 'ladder', 'rebars','excavater')
+voc_labels = ('bulldozer', 'crane', 'formwork', 'ladder', 'rebars','excavator')
 label_map = {k: v + 1 for v, k in enumerate(voc_labels)}
 label_map['background'] = 0
 rev_label_map = {v: k for k, v in label_map.items()}  # Inverse mapping
 
 # Color map for bounding boxes of detected objects from https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
-distinct_colors = ['#e6194b', '#3cb44b', '#ffe119', '#0082c8', '#f58231', '#911eb4', '#467cf0','#FFFFFF']
+distinct_colors = ['#e6194b', '#3cb44b', '#000000', '#0082c8', '#f58231', '#911eb4','#FFFFFF']
 label_color_map = {k: distinct_colors[i] for i, k in enumerate(label_map.keys())}
 
 
@@ -26,26 +26,32 @@ def parse_annotation(annotation_path):
     boxes = list()
     labels = list()
     difficulties = list()
+    c=0
     for object in root.iter('object'):
+        c+=1
+        if c<4:
 
-        difficult = int(object.find('difficult').text == '1')
 
-        label = object.find('name').text.lower().strip()
-#        print(label)
-        if label not in label_map:
-            continue
+            difficult = int(object.find('difficult').text == '1')
 
-        bbox = object.find('bndbox')
-        #print(bbox)
-        xmin = int(bbox.find('xmin').text) - 1
-        #print(2)
-        ymin = int(bbox.find('ymin').text) - 1
-        xmax = int(bbox.find('xmax').text) - 1
-        ymax = int(bbox.find('ymax').text) - 1
+            label = object.find('name').text.lower().strip()
+            if label=="rebar":
+                label='rebars'
+    #        print(label)
+            if label not in label_map:
+                continue
 
-        boxes.append([xmin, ymin, xmax, ymax])
-        labels.append(label_map[label])
-        difficulties.append(difficult)
+            bbox = object.find('bndbox')
+            #print(bbox)
+            xmin = int(bbox.find('xmin').text) - 1
+            #print(2)
+            ymin = int(bbox.find('ymin').text) - 1
+            xmax = int(bbox.find('xmax').text) - 1
+            ymax = int(bbox.find('ymax').text) - 1
+
+            boxes.append([xmin, ymin, xmax, ymax])
+            labels.append(label_map[label])
+            difficulties.append(difficult)
 
     return {'boxes': boxes, 'labels': labels, 'difficulties': difficulties}
 
@@ -73,15 +79,16 @@ def create_data_lists(voc07_path, output_folder):
         ids = f.read().splitlines()
 #
     for id in ids:
-        print(id)
+        #print(id)
         # Parse annotation's XML file
         objects = parse_annotation(os.path.join(path, 'Annotations', id + '.xml'))
         if len(objects) == 0:
             continue
         n_objects += len(objects)
+
         train_objects.append(objects)
         train_images.append(os.path.join(path, 'JPEGImages', id + '.jpg'))
-
+    #print(n_objects)
     assert len(train_objects) == len(train_images)
 
     # Save to file
@@ -349,9 +356,15 @@ def find_intersection(set_1, set_2):
     """
 
     # PyTorch auto-broadcasts singleton dimensions
+    # print(set_1[:, :2].unsqueeze(1))
+    # print(set_2[:, :2].unsqueeze(1))
+    #print(set_1[:, :2].unsqueeze(1).size())
+    #print(set_2[:, :2].unsqueeze(0).size())
     lower_bounds = torch.max(set_1[:, :2].unsqueeze(1), set_2[:, :2].unsqueeze(0))  # (n1, n2, 2)
     upper_bounds = torch.min(set_1[:, 2:].unsqueeze(1), set_2[:, 2:].unsqueeze(0))  # (n1, n2, 2)
-    intersection_dims = torch.clamp(upper_bounds - lower_bounds, min=0)  # (n1, n2, 2)
+    intersection_dims = torch.clamp(upper_bounds - lower_bounds, min=0)
+    # (n1, n2, 2)
+    #print("inter "+str(intersection_dims[:, :, 0] * intersection_dims[:, :, 1]).size())
     return intersection_dims[:, :, 0] * intersection_dims[:, :, 1]  # (n1, n2)
 
 
@@ -412,10 +425,9 @@ def expand(image, boxes, filler):
     top = random.randint(0, new_h - original_h)
     bottom = top + original_h
     new_image[:, top:bottom, left:right] = image
-
+    #print(boxes)
     # Adjust bounding boxes' coordinates accordingly
-    new_boxes = boxes + torch.FloatTensor([left, top, left, top]).unsqueeze(
-        0)  # (n_objects, 4), n_objects is the no. of objects in this image
+    new_boxes = boxes + torch.FloatTensor([left, top, left, top]).unsqueeze(0)  # (n_objects, 4), n_objects is the no. of objects in this image
 
     return new_image, new_boxes
 
@@ -679,8 +691,8 @@ def save_checkpoint(epoch, model, optimizer):
     state = {'epoch': epoch,
              'model': model,
              'optimizer': optimizer}
-    filename = 'checkpoint_ssd300.pth.tar'
-    torch.save(state, filename)
+    #filename = 'checkpoint_ssd300.pth.tar'
+    #torch.save(state, filename)
 
 
 class AverageMeter(object):

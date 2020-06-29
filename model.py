@@ -216,6 +216,7 @@ class PredictionConvolutions(nn.Module):
 
         # Localization prediction convolutions (predict offsets w.r.t prior-boxes)
         self.loc_conv4_3 = nn.Conv2d(512, n_boxes['conv4_3'] * 4, kernel_size=3, padding=1)
+        #print(self.loc_conv4_3)
         self.loc_conv7 = nn.Conv2d(1024, n_boxes['conv7'] * 4, kernel_size=3, padding=1)
         self.loc_conv8_2 = nn.Conv2d(512, n_boxes['conv8_2'] * 4, kernel_size=3, padding=1)
         self.loc_conv9_2 = nn.Conv2d(256, n_boxes['conv9_2'] * 4, kernel_size=3, padding=1)
@@ -258,6 +259,7 @@ class PredictionConvolutions(nn.Module):
 
         # Predict localization boxes' bounds (as offsets w.r.t prior-boxes)
         l_conv4_3 = self.loc_conv4_3(conv4_3_feats)  # (N, 16, 38, 38)
+        #print(l_conv4_3)
         l_conv4_3 = l_conv4_3.permute(0, 2, 3,
                                       1).contiguous()  # (N, 38, 38, 16), to match prior-box order (after .view())
         # (.contiguous() ensures it is stored in a contiguous chunk of memory, needed for .view() below)

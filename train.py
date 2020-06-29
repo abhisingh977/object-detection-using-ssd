@@ -1,18 +1,13 @@
-
-
-
-
-
 import time
 from typing import List, Any
-
+import wandb
 import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.utils.data
 from model import SSD300, MultiBoxLoss
 from datasets import PascalVOCDataset
 from utils import *
-
+import argparse
 # Data parameters
 data_folder = './'  # folder with data files
 keep_difficult = True  # use objects considered difficult to detect?
@@ -20,81 +15,104 @@ keep_difficult = True  # use objects considered difficult to detect?
 # Model parameters
 # Not too many here since the SSD300 has a very specific structure
 n_classes = len(label_map)  # number of different types of objects
+
+torch.cuda.set_device(0)
+torch.cuda.current_device()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Learning parameters
-#checkpoint = 'checkpoint_ssd300.pth.tar'  # path to model checkpoint, None if none
-checkpoint=None
-batch_size = 16  # batch size
+# Learning
+checkpoint = None # path to model checkpoint, None if none
+batch_size = 16 # batch size
 
 #iterations = 125  # number of iterations to train
 workers = 4  # number of workers for loading data in the DataLoader
-#print_freq = 80  # print training status every __ batches
-#lr = 1e-3  # learning rate
-#decay_lr_at = [30,60,75]  # decay learning rate after these many iterations
-#decay_lr_to = 0.1  # decay learning rate to this fraction of the existing learning rate
-#momentum = 0.9  # momentum
+  # print training status every __ batches
+lr = 1e-3 # learning rate
+decay_lr_at = [60,90] # decay learning rate after these many iterations
+decay_lr_to = 0.1  # decay learning rate to this fraction of the existing learning rate
+momentum = 0.9  # momentum
 weight_decay = 5e-4  # weight decay
 grad_clip = None  # clip if gradients are exploding, which may happen at larger batch sizes (sometimes at 32) - you will recognize it by a sorting error in the MuliBox loss calculation
 
 cudnn.benchmark = True
-
+#iterations = 120000
 
 def main():
+    wandb.init()
+
+    # Config is a variable that holds and saves hyperparameters and inputs
+    #wandb.watch(model)
+
+    torch.manual_seed(30)
+    """
+    Training.
+    """
+    global start_epoch, label_map, epoch, checkpoint, decay_lr_at
+    #print(device)
+    # Initialize model or load checkpoint
+    # if checkpoint is None:
+    start_epoch = 0
+    model = SSD300(n_classes=n_classes)
 
 
+    # if checkpoint is None:
+    #     start_epoch = 0
+    #     model = SSD300(n_classes=n_classes)
+    #     # Initialize the optimizer, with twice the default learning rate for biases, as in the original Caffe repo
+    #     biases: List[Any] = list()
+    #     not_biases = list()
+    #     for param_name, param in model.named_parameters():
+    #         if param.requires_grad:
+    #             if param_name.endswith('.bias'):
+    #                 biases.append(param)
+    #             else:
+    #                 not_biases.append(param)
+    #     optimizer = torch.optim.SGD(params=[{'params': biases, 'lr': 2 * lr}, {'params': not_biases}],
+    #                                 lr=lr, momentum=momentum, weight_decay=weight_decay)
+    #
+    # else:
+    #     checkpoint = torch.load(checkpoint)
+    #     start_epoch = checkpoint['epoch'] + 1
+    #     print('\nLoaded checkpoint from epoch %d.\n' % start_epoch)
+    #     model = checkpoint['model']
+    #     optimizer = checkpoint['optimizer']
+
+    # Initialize the optimizer, with twice the default learning rate for biases, as in the original Caffe repo
+    biases: List[Any] = list()
+    not_biases = list()
+    for param_name, param in model.named_parameters():
+        if param.requires_grad:
+            if param_name.endswith('.bias'):
+                biases.append(param)
+            else:
+                not_biases.append(param)
+    optimizer = torch.optim.SGD(params=[{'params': biases, 'lr': 2 * lr}, {'params': not_biases}],
+                                lr=lr, momentum=momentum, weight_decay=weight_decay)
+
+    # else:
+    #     checkpoint = torch.load(checkpoint)
+    #     start_epoch = checkpoint['epoch'] + 1
+    #     print('\nLoaded checkpoint from epoch %d.\n' % start_epoch)
+    #     model = checkpoint['model']
+    #     optimizer = checkpoint['optimizer']
+
+    # Move to default device
+    model = model.to(device)
+    criterion = MultiBoxLoss(priors_cxcy=model.priors_cxcy).to(device)
+    wandb.watch(model, log="all")
     # Custom dataloaders
     train_dataset = PascalVOCDataset(data_folder,
                                      split='train',
                                      keep_difficult=keep_difficult)
+   # print(train_dataset)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
                                                collate_fn=train_dataset.collate_fn, num_workers=workers,
                                                pin_memory=True)  # note that we're passing the collate function here
 
 
-    test_dataset = PascalVOCDataset(data_folder,
-                                    split='test',
-                                    keep_difficult=keep_difficult)
+    test_dataset = PascalVOCDataset(data_folder,split='test', keep_difficult=keep_difficult)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True,
                                               collate_fn=test_dataset.collate_fn, num_workers=workers, pin_memory=True)
-
-
-
-
-
-    """
-    Training.
-    """
-    global start_epoch, label_map, epoch, checkpoint
-
-    # Initialize model or load checkpoint
-    if checkpoint is None:
-        start_epoch = 0
-        model = SSD300(n_classes=n_classes)
-        # Initialize the optimizer, with twice the default learning rate for biases, as in the original Caffe repo
-        lr=0.01
-        optimizer = torch.optim.SGD([
-        {'params': model.base.parameters(), 'lr': lr/100},
-        {'params': model.aux_convs.parameters(), 'lr ':lr/10 },
-        {'params': model.pred_convs.parameters()}], lr=0.01, momentum=0.8)
-        scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=[0.00001,0.0001,0.001], max_lr=[0.00009,0.0009,0.009],step_size_up=31,step_size_down=31)
-        #print(model)
-    else:
-        checkpoint = torch.load(checkpoint)
-        start_epoch = checkpoint['epoch'] + 1
-        print('\nLoaded checkpoint from epoch %d.\n' % start_epoch)
-        model = checkpoint['model']
-        optimizer = checkpoint['optimizer']
-        scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=[0.000001, 0.00001, 0.0001],
-                                                      max_lr=[0.000009, 0.00009, 0.0009], step_size_up=31,
-                                                      step_size_down=31)
-
-
-    # Move to default device
-    model = model.to(device)
-    criterion = MultiBoxLoss(priors_cxcy=model.priors_cxcy).to(device)
-
-
     #print(next(iter(test_loader)))
 #    print(train_loader)
 #    a=next(iter(train_loader))
@@ -102,24 +120,24 @@ def main():
     # Calculate total number of epochs to train and the epochs to decay learning rate at (i.e. convert iterations to epochs)
     # To convert iterations to epochs, divide iterations by the number of iterations per epoch
     # The paper trains for 120,000 iterations with a batch size of 32, decays after 80,000 and 100,000 iterations
-    #epochs = iterations // (len(train_dataset) // 8)
+   # epochs = iterations // (len(train_dataset) // 8)
     #print(epochs)
     #decay_lr_at = [it // (len(train_dataset) // 32) for it in decay_lr_at]
-    epochs = 50
+
+    epochs = 125
     # Epochs
-    #scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,div_factor=100.0, final_div_factor=100000.0, max_lr=0.001, total_steps=66)
     for epoch in range(start_epoch, epochs):
 
+        # Decay learning rate at particular epochs
+        if epoch in decay_lr_at:
+            adjust_learning_rate(optimizer, decay_lr_to)
 
         # One epoch's training
         train(train_loader=train_loader,
               model=model,
               criterion=criterion,
               optimizer=optimizer,
-              scheduler=scheduler,
               epoch=epoch)
-        #print(scheduler.get_lr())
-
         test(test_loader=test_loader,
               model=model,
               criterion=criterion,
@@ -127,10 +145,10 @@ def main():
               epoch=epoch)
 
         # Save checkpoint
-        save_checkpoint(epoch, model, optimizer)
+        #save_checkpoint(epoch, model, optimizer)
 
 
-def train(train_loader, model, criterion, optimizer,scheduler, epoch):
+def train(train_loader, model, criterion, optimizer, epoch):
     """
     One epoch's training.
 
@@ -149,11 +167,15 @@ def train(train_loader, model, criterion, optimizer,scheduler, epoch):
     start = time.time()
 
     # Batches
+    tott_loss=0
+    counter=0
     for i, (images, boxes, labels, _) in enumerate(train_loader):
         #print(i)
-        # scheduler.step()
-        # print(scheduler.get_lr())
+        #print(i)
+        # counter+=1
+        # print(counter)
 #        print(boxes)
+
         data_time.update(time.time() - start)
 
         # Move to default device
@@ -176,17 +198,14 @@ def train(train_loader, model, criterion, optimizer,scheduler, epoch):
             clip_gradient(optimizer, grad_clip)
 
         # Update model
-
         optimizer.step()
-
         #print(loss.item())
         losses.update(loss.item(), images.size(0))
         #batch_time.update(time.time() - start)
-
+        tott_loss+=loss
         start = time.time()
 
-        scheduler.step()
-        #print(scheduler.get_lr())
+
         # Print status
         if i  ==  len(train_loader)-1:
             print('Epoch: [{0}]\t'
@@ -194,6 +213,13 @@ def train(train_loader, model, criterion, optimizer,scheduler, epoch):
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch,
                                                                  # batch_time=batch_time,
                                                                   data_time=data_time, loss=losses))
+            wandb.log({"Epoch":epoch, "Train Loss": (tott_loss / len(train_loader))})
+        #
+        # if i == len(train_loader)-1 == 0:
+        #     print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+        #         epoch, i * len(labels), len(train_loader.dataset),
+        #         100. * i / len(train_loader), losses))
+
 
     del predicted_locs, predicted_scores, images, boxes, labels  # free some memory since their histories may be stored
 
@@ -215,7 +241,7 @@ def test(test_loader, model, criterion, epoch):
         #batch_time = AverageMeter()  # forward prop. time
         data_time = AverageMeter()  # data loading time
         losses_test = AverageMeter()  # loss
-
+        tot_loss=0
         start = time.time()
 
         # Batches
@@ -245,12 +271,15 @@ def test(test_loader, model, criterion, epoch):
             #
             # # Update model
             # optimizer.step()
-            #print(loss.item())
+
+            #loss.item()
             losses_test.update(loss.item(), images.size(0))
             #batch_time.update(time.time() - start)
 
             start = time.time()
 
+            tot_loss+=loss
+            #print(tot_loss)
 
             # Print status
             if i  == len(test_loader)-1:
@@ -259,9 +288,12 @@ def test(test_loader, model, criterion, epoch):
                       'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch,
                                                                       #batch_time=batch_time,
                                                                       data_time=data_time, loss=losses_test))
+
+                wandb.log({"Epoch":(epoch),
+                   "Test Loss":(tot_loss/len(test_loader))})
         del predicted_locs, predicted_scores, images, boxes, labels  # free some memory since their histories may be stored
 
-
+        torch.save(model.state_dict(), os.path.join(wandb.run.dir, 'model.pt'))
 
 
 
