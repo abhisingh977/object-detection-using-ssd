@@ -9,3 +9,15 @@ Link to the repo- https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detec
 
 
 
+I have implepented traning of the for three diffrent kind of learning rate. 
+1. constant learning rate.
+2. learning rate annelling.
+3. cyclic learning rate.
+
+The dataset should be in Pascal VOC format.
+
+Pipeline for file running
+1. Run create_data_lists.py
+2. Run the train file i.e. constlr.py/annelling.py/cyclelr.py
+3. Run eval.py to get the map on test set.
+4. Run detect.py to get real time object detection inference.
