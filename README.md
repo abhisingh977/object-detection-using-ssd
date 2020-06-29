@@ -21,3 +21,9 @@ Pipeline for file running
 2. Run the train file i.e. constlr.py/annelling.py/cyclelr.py
 3. Run eval.py to get the map on test set.
 4. Run detect.py to get real time object detection inference.
+
+
+The code is intregated with Weights & Biases AIP so that you can experiment with your model.
+
+
+# Enjoy
