@@ -1,0 +1,55 @@
+Time elasped:- 1
+Ladder is present at the construction site
+ 01 50 00 Temporary Facilities and Controls
+01 50 00 Temporary Facilities and Controls
+‭01 54 23.80.2100‬ Staging Aid/Fall Protection Equip., steel side-rail ladder jack, per pair,buy
+‭‭01 54 2375.3800‬ Scaffolding Specialties, rolling ladder with handrails, buy, 30 W x 2 step
+
+Formwork is present at the construction site
+03 10 00 Concrete Forming and Accessories
+‭03 11  1345.1500 Casting In Place concrete forms, footing, keyway, tapered wood, 2x4, 4 use, includes erecting, bracing, stripping, and cleaning
+‭03 11  1345.5300 Casting in Place concrete forms, pile cap, square or rectangular, plywood,  1 use, includes erecting, bracing, stripping, and cleaning
+Time elasped:- 2
+Ladder is present at the construction site
+ 01 50 00 Temporary Facilities and Controls
+01 50 00 Temporary Facilities and Controls
+‭01 54 23.80.2100‬ Staging Aid/Fall Protection Equip., steel side-rail ladder jack, per pair,buy
+‭‭01 54 2375.3800‬ Scaffolding Specialties, rolling ladder with handrails, buy, 30 W x 2 step
+
+Formwork is present at the construction site
+03 10 00 Concrete Forming and Accessories
+‭03 11  1345.1500 Casting In Place concrete forms, footing, keyway, tapered wood, 2x4, 4 use, includes erecting, bracing, stripping, and cleaning
+‭03 11  1345.5300 Casting in Place concrete forms, pile cap, square or rectangular, plywood,  1 use, includes erecting, bracing, stripping, and cleaning
+Time elasped:- 3
+Ladder is present at the construction site
+ 01 50 00 Temporary Facilities and Controls
+01 50 00 Temporary Facilities and Controls
+‭01 54 23.80.2100‬ Staging Aid/Fall Protection Equip., steel side-rail ladder jack, per pair,buy
+‭‭01 54 2375.3800‬ Scaffolding Specialties, rolling ladder with handrails, buy, 30 W x 2 step
+
+Formwork is present at the construction site
+03 10 00 Concrete Forming and Accessories
+‭03 11  1345.1500 Casting In Place concrete forms, footing, keyway, tapered wood, 2x4, 4 use, includes erecting, bracing, stripping, and cleaning
+‭03 11  1345.5300 Casting in Place concrete forms, pile cap, square or rectangular, plywood,  1 use, includes erecting, bracing, stripping, and cleaning
+Time elasped:- 4
+Ladder is present at the construction site
+ 01 50 00 Temporary Facilities and Controls
+01 50 00 Temporary Facilities and Controls
+‭01 54 23.80.2100‬ Staging Aid/Fall Protection Equip., steel side-rail ladder jack, per pair,buy
+‭‭01 54 2375.3800‬ Scaffolding Specialties, rolling ladder with handrails, buy, 30 W x 2 step
+
+Formwork is present at the construction site
+03 10 00 Concrete Forming and Accessories
+‭03 11  1345.1500 Casting In Place concrete forms, footing, keyway, tapered wood, 2x4, 4 use, includes erecting, bracing, stripping, and cleaning
+‭03 11  1345.5300 Casting in Place concrete forms, pile cap, square or rectangular, plywood,  1 use, includes erecting, bracing, stripping, and cleaning
+Time elasped:- 5
+Ladder is present at the construction site
+ 01 50 00 Temporary Facilities and Controls
+01 50 00 Temporary Facilities and Controls
+‭01 54 23.80.2100‬ Staging Aid/Fall Protection Equip., steel side-rail ladder jack, per pair,buy
+‭‭01 54 2375.3800‬ Scaffolding Specialties, rolling ladder with handrails, buy, 30 W x 2 step
+
+Formwork is present at the construction site
+03 10 00 Concrete Forming and Accessories
+‭03 11  1345.1500 Casting In Place concrete forms, footing, keyway, tapered wood, 2x4, 4 use, includes erecting, bracing, stripping, and cleaning
+‭03 11  1345.5300 Casting in Place concrete forms, pile cap, square or rectangular, plywood,  1 use, includes erecting, bracing, stripping, and cleaning

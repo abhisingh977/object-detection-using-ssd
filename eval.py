@@ -24,7 +24,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = SSD300(n_classes=n_classes)
 
 model = model.to(device)
-checkpoint = torch.load('modelannefinal.pt')
+checkpoint = torch.load('model.pt')
 model.load_state_dict(checkpoint)
 # # Switch to eval mode
 model.eval()

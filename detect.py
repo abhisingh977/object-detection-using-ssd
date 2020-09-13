@@ -119,7 +119,7 @@ if __name__ == '__main__':
     file.truncate(0)
     file.close()
     f = Counter()
-    cap = cv2.VideoCapture('DJI_0072.MOV')
+    cap = cv2.VideoCapture('v9.mp4')
     sec=0
     q=0
     q=str(q)
@@ -140,7 +140,7 @@ if __name__ == '__main__':
         pil_image = Image.fromarray(
             cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
-        img, mat = detect(pil_image, min_score=0.3, max_overlap=0.4, top_k=200)
+        img, mat = detect(pil_image, min_score=0.5, max_overlap=0.5, top_k=200)
         #pil_image = Image.open(img).convert('RGB')
         lab.extend(mat)
         open_cv_image = np.array(img)
@@ -161,7 +161,7 @@ if __name__ == '__main__':
 
         vid = cv2.resize(open_cv_image, dim, interpolation=cv2.INTER_AREA)
         s=Counter(lab)
-        print(s)
+        #print(s)
         window_name = 'video'
 
         # font
@@ -184,7 +184,7 @@ if __name__ == '__main__':
                             fontScale, color, thickness, cv2.LINE_AA)
 
         cv2.imshow(window_name, vid)
-        os.chdir("C:/Users/Home/Documents/res/res/img72")
+        os.chdir("C:/Users/Iconsense/Desktop/res_new/res_new/v9/")
         cv2.imwrite("frame-" + str(count) + ".jpg", vid)
         #open_cv_image = cv2.resize(open_cv_image, dim, interpolation = cv2.INTER_AREA)
         #cv2.imshow('frame',open_cv_image)
@@ -203,12 +203,12 @@ if __name__ == '__main__':
             sec+=1
 
             q=str(sec)
-            print(sec)
+            #print(sec)
             stat=("Time elasped:- "+ q +"\n")
             fo.write(stat)
 
             if "bulldozer" in s:
-                if s["bulldozer"] > 35:
+                if s["bulldozer"] > 1:
                     fo.write("Activity : Spread filling\n\n")
                     #fo.write("\nBulldozer is present at the construction site\n")
                     fo.write("01 50 00 Temporary Facilities and Controls\n")
@@ -216,27 +216,27 @@ if __name__ == '__main__':
 
 
             if "crane" in s:
-                if s["crane"] > 35:
+                if s["crane"] > 1:
                     fo.write("\nCrane is present at the construction site\n")
                     fo.write("01 50 00 Temporary Facilities and Controls\n")
                     fo.write("‭01 54 19600.010 Crane crew, tower crane, static, 130' high, 106' jib, 6200 lb. capacity, monthly use, excludes concrete footing\n")
                     fo.write(" Moving materials for crews: crane\n\n")
             if "ladder" in s:
-                if s["ladder"] > 35:
+                if s["ladder"] > 1:
                     fo.write("\nActivity: Scaffolding Specialties & Staging Aid\n 01 50 00 Temporary Facilities and Controls\n")
                     fo.write("01 50 00 Temporary Facilities and Controls\n")
                     fo.write("‭01 54 23.80.2100‬ Staging Aid/Fall Protection Equip., steel side-rail ladder jack, per pair,buy\n")
                     fo.write("‭‭01 54 2375.3800‬ Scaffolding Specialties, rolling ladder with handrails, buy, 30 W x 2 step\n\n")
 
             if "formwork" in s:
-                if s["formwork"] > 35:
+                if s["formwork"] > 1:
                     fo.write("\nActivity: Concrete Forming \n")
                     fo.write("03 10 00 Concrete Forming and Accessories\n")
                     fo.write("‭03 11  1345.1500 Casting In Place concrete forms, footing, keyway, tapered wood, 2x4, 4 use, includes erecting, bracing, stripping, and cleaning\n")
                     fo.write("‭03 11  1345.5300 Casting in Place concrete forms, pile cap, square or rectangular, plywood,  1 use, includes erecting, bracing, stripping, and cleaning\n\n")
 
             if "rebars" in s:
-                if s["rebars"] > 35:
+                if s["rebars"] > 1:
                     fo.write("\nActivity : Casting in place\n")
                     fo.write("03 30 00 Cast-in-Place Concrete\n")
                     fo.write(
@@ -248,7 +248,8 @@ if __name__ == '__main__':
 
 
             if "excavator" in s:
-                if s["excavator"] > 35:
+                if s["excavator"] > 1:
+                 #   print("sdvksdhvdksjvbsjvbsdkvbs kvsdb khbsdcjsdbckjsd sdkjvbsdkjvbsdkbdvhjjyhcfgv gfgv fhvc jyhgcgcjgdgsesfdghjhggfdzxfcgvhbjvcbvbjhutydfxcjhtdrxcvbnbjhdfxcbnhgfdx")
                     fo.write("\n Activity : Excavating and Filling \n")
                     fo.write("31 23 00 Excavation and Fill\n")
                     fo.write(
@@ -259,7 +260,7 @@ if __name__ == '__main__':
 
             # fo.write("Python is a great language.\nYeah its great!!\n")
             s.clear()
-            print(s)
+            #print(s)
             lab.clear()
             fo.close()
 
